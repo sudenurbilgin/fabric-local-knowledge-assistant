@@ -1,0 +1,20 @@
+from pathlib import Path
+
+
+PACKAGE_DIRECTORY = Path(__file__).resolve().parent
+PROJECT_ROOT = PACKAGE_DIRECTORY.parents[1]
+DOCUMENTS_DIRECTORY = PROJECT_ROOT / "data" / "documents"
+DATABASE_PATH = PROJECT_ROOT / "rag.db"
+
+FOUNDRY_APP_NAME = "foundry_local_rag"
+EMBEDDING_MODEL_ALIAS = "qwen3-embedding-0.6b"
+CHAT_MODEL_ALIAS = "phi-4-mini"
+CHAT_MODEL_VARIANT_ID = "Phi-4-mini-instruct-generic-cpu:5"
+CPU_EXECUTION_PROVIDER = "CPUExecutionProvider"
+
+CHUNK_SIZE = 1500
+CHUNK_OVERLAP = 200
+RETRIEVAL_TOP_K = 3
+EMBEDDING_BATCH_SIZE = 16
+
+EXPECTED_EMBEDDING_DIMENSIONS = 1024
