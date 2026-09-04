@@ -2,7 +2,7 @@
 
 A private, local Retrieval-Augmented Generation (RAG) assistant for asking questions about your own documents with inspectable citations.
 
-The application uses Microsoft Foundry Local for local retrieval and answer generation. Documents, embeddings, retrieval, and generated answers remain on the local machine; no cloud LLM API is used for question answering.
+The application uses Microsoft Foundry Local for local embeddings and answer generation. Documents, embeddings, retrieval, and generated answers remain on the local machine; no cloud LLM API is used for question answering.
 
 ## Features
 
@@ -153,4 +153,6 @@ run_app.ps1         Windows launcher
 
 This is an independent project and is not an official Microsoft product.
 
-Bundled Microsoft Fabric documentation remains subject to its original licensing and attribution requirements.
+Bundled Microsoft Fabric documentation is subject to its original licensing and attribution terms; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+Copyright © 2026 Sudenur Bilgin. All rights reserved. This copyright notice applies only to the original project code and does not override third-party rights or licenses.

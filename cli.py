@@ -7,7 +7,7 @@ def main():
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
 
-    print("Microsoft Fabric Documentation Assistant")
+    print("Fabric Local Knowledge Assistant")
     print("Local RAG using Microsoft Foundry Local")
     print("Type 'exit' to quit.")
 
