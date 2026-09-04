@@ -1,100 +1,78 @@
 # Fabric Local Knowledge Assistant
 
-A private, local retrieval-augmented generation assistant that answers questions from your documents with inspectable citations using Microsoft Foundry Local.
+A private, local Retrieval-Augmented Generation (RAG) assistant for asking questions about your own documents with inspectable citations.
 
-## Highlights
+The application uses Microsoft Foundry Local for local retrieval and answer generation. Documents, embeddings, retrieval, and generated answers remain on the local machine; no cloud LLM API is used for question answering.
 
-- Local answer generation with `Phi-4-mini-instruct-generic-cpu:5`
-- Local semantic retrieval with `qwen3-embedding-0.6b`
-- Grounded numbered citations and unsupported-question refusal
-- Persistent retriever with measured warm-query reuse
-- Transactional SQLite knowledge-base rebuilds
-- Safe, staged source management from Streamlit
-- Markdown, plain text, text-based PDF, and DOCX ingestion
-- No cloud LLM API
+## Features
 
-## Product interface
-
-The Streamlit application uses three focused pages:
-
-- **Chat** — cited answers, supporting evidence cards, examples, and session controls
-- **Knowledge Base** — source management, index status, coverage charts, and explicit rebuilds
-- **System & Evaluation** — architecture, current configuration, historical benchmark, and validation record
-
-### Demo screenshots
-
-> Presentation placeholder: add final Chat, Knowledge Base, and System & Evaluation screenshots here before publishing the project portfolio.
-
-## Architecture
-
-```text
-Documents
-    → text extraction and Markdown cleaning
-    → paragraph-aware chunking
-    → qwen3 embeddings
-    → SQLite knowledge base
-    → Top-3 cosine-similarity retrieval
-    → local Phi-4 Mini generation
-    → cited answer
-```
-
-The bundled corpus currently contains eight selected Microsoft Fabric documents and 90 indexed passages. Those counts are discovered dynamically and are not production requirements.
-
-## Local and private by design
-
-Source extraction, chunking, embeddings, retrieval, and answer generation run through the local project pipeline. Uploaded source files remain in `data/documents`, and the generated vectors remain in `rag.db`. The application does not send documents or questions to a cloud LLM API. Initial model catalog access or acquisition can still require the Microsoft Foundry Local runtime to reach its configured catalog.
+- Local document Q&A with grounded answers
+- Numbered citations linked to retrieved evidence
+- Refusal of questions that are not supported by the indexed documents
+- Persistent semantic retrieval for faster warm queries
+- Safe document management from the Streamlit interface
+- Explicit, transactional knowledge-base rebuilds
+- Dynamic document collections
+- Markdown, TXT, text-based PDF, and DOCX support
+- Local SQLite knowledge-base storage
 
 ## Supported documents
 
-| Format | Behavior |
+| Format | Support |
 | --- | --- |
-| Markdown (`.md`) | Common UTF-8, UTF-16, and Windows-1254 encodings are handled where possible. |
-| Plain text (`.txt`) | Uses the same deterministic encoding strategy as Markdown. |
-| Text-based PDF (`.pdf`) | Extracts embedded text page by page and ignores empty pages. |
-| Word (`.docx`) | Preserves paragraph order and standard heading/list text. |
+| Markdown (`.md`) | Yes |
+| Plain text (`.txt`) | Yes |
+| Text-based PDF (`.pdf`) | Yes |
+| Word (`.docx`) | Yes |
 
-Scanned or image-only PDF OCR is not supported. Complex Word layout, images, comments, and tracked-change semantics are not reconstructed.
+Scanned or image-only PDFs are not currently supported because OCR is not implemented.
 
-## Historical engineering benchmark
+## Current production configuration
 
-Measured on the original baseline corpus with warm-query retrieval only:
+| Component | Configuration |
+| --- | --- |
+| Embedding model | `qwen3-embedding-0.6b` |
+| Chat model | `Phi-4-mini-instruct-generic-cpu:5` |
+| Execution provider | `CPUExecutionProvider` |
+| Retrieval | Top-3 cosine similarity |
+| Knowledge base | SQLite (`rag.db`) |
+| Interface | Streamlit |
+| Cloud LLM API | None |
 
-| Retrieval implementation | Average time |
-| --- | ---: |
-| Previous stateless retrieval | approximately 2.31 seconds |
-| Persistent retrieval | approximately 0.38 seconds |
-| Measured warm speedup | **6.06x** |
+The bundled example corpus currently contains 8 Microsoft Fabric documents and 90 indexed passages. These counts are discovered dynamically and are not hard-coded production requirements.
 
-These are historical engineering measurements, not a guarantee for every query. Cold model initialization is excluded.
+## Quick start
 
-## Engineering validation
+### Requirements
 
-| Diagnostic | Recorded result |
-| --- | ---: |
-| Top-3 persistent retrieval regression | 4 / 4 PASS |
-| Knowledge Base Manager safety | 12 / 12 PASS |
-| Multi-format source ingestion | 13 / 13 PASS |
-| Dynamic corpus validation | PASS |
-| Persistent retriever reuse and cleanup | PASS |
+- Windows
+- Python 3.12
+- Microsoft Foundry Local
 
-These are engineering regression results, not accuracy, confidence, or answer-quality percentages. Experimental adaptive and neighboring-chunk retrieval remain isolated in diagnostics.
-
-## Installation
-
-This project targets Windows with Python 3.12 and Microsoft Foundry Local.
+Clone the repository:
 
 ```powershell
-py -3.12 -m venv .venv
+git clone https://github.com/sudenurbilgin/fabric-local-knowledge-assistant.git
+cd fabric-local-knowledge-assistant
+```
+
+Create and activate a virtual environment:
+
+```powershell
+python -m venv .venv
 .\.venv\Scripts\Activate.ps1
+```
+
+Install the dependencies and the local package:
+
+```powershell
 python -m pip install -r requirements.txt
 python -m pip install -e .
 ```
 
-The required embedding and chat model variants must be available through Microsoft Foundry Local.
+The configured embedding and chat model variants must be available through Microsoft Foundry Local.
 
-## Run
-
-Presentation-friendly PowerShell launcher:
+### Run the Streamlit application
 
 ```powershell
 .\run_app.ps1
@@ -103,42 +81,76 @@ Presentation-friendly PowerShell launcher:
 Or launch Streamlit directly:
 
 ```powershell
-.\.venv\Scripts\python.exe -m streamlit run streamlit_app.py
+python -m streamlit run streamlit_app.py
 ```
 
-Command-line interface:
+Then open the local Streamlit address shown in the terminal.
+
+### Command-line interface
 
 ```powershell
-.\.venv\Scripts\python.exe cli.py
+python cli.py
 ```
 
 ## Knowledge-base workflow
 
-Source additions and removals are staged and never silently treated as indexed. The application compares the current extracted/chunked content with `rag.db` and shows **Rebuild required** after an addition, removal, or content modification.
+Documents can be added or removed from the **Knowledge Base** page.
 
-An explicit rebuild closes the active RAG session, extracts the current sources, generates embeddings, and transactionally validates the replacement index. If rebuilding fails, the previous valid database is preserved. The next question after a successful rebuild creates a fresh local session lazily.
+Changes to the source collection do not silently modify the active index. When the source collection differs from the current SQLite knowledge base, the application shows **Rebuild required**.
 
-## Known limitation
+A rebuild extracts the current documents, cleans and chunks their text, generates local embeddings, validates the new data, and transactionally replaces the existing index.
 
-Broad questions whose required evidence spans chunk boundaries may not receive every required passage within the fixed Top-3 context.
+If rebuilding fails, the previous valid knowledge base is preserved.
 
-## Repository structure
+## Performance
+
+The production retriever keeps the embedding model and stored vectors available between queries instead of recreating them for every request.
+
+Historical warm-query benchmark on the original corpus:
+
+| Retrieval implementation | Average |
+| --- | ---: |
+| Previous stateless retrieval | ~2.31 s |
+| Persistent retrieval | ~0.38 s |
+| Measured speedup | **6.06×** |
+
+These are historical engineering measurements, not guaranteed latency for every query or machine. Cold model initialization is excluded.
+
+## Validation
+
+The repository includes engineering diagnostics covering:
+
+- retrieval regression
+- persistent retriever lifecycle and cleanup
+- Knowledge Base management safety
+- multi-format source ingestion
+- dynamic corpus handling
+- Streamlit presentation and session lifecycle
+
+Experimental adaptive retrieval and neighboring-chunk expansion remain isolated from the production path.
+
+## Known limitations
+
+- Production retrieval intentionally uses a fixed Top-3 context, so broad questions whose required evidence spans multiple chunk boundaries may miss part of the available evidence.
+- OCR for scanned or image-only PDFs is not implemented.
+- Complex Word layouts, embedded images, comments, and tracked-change semantics are not reconstructed.
+
+## Project structure
 
 ```text
-app_pages/                         Streamlit Chat, Knowledge Base, and System pages
-data/documents/                    Local source-of-truth document collection
-src/fabric_rag/config.py           Paths and validated production constants
-src/fabric_rag/ingestion.py        Multi-format extraction and text decoding
-src/fabric_rag/documents.py        Cleaning and paragraph-aware chunking
-src/fabric_rag/embeddings.py       Embedding preparation and model helpers
-src/fabric_rag/knowledge_base.py   Transactional SQLite build and validation
-src/fabric_rag/management.py       Safe source management and freshness checks
-src/fabric_rag/retrieval.py        Persistent Top-3 cosine retrieval
-src/fabric_rag/rag.py              Grounded prompt and persistent RAG session
-diagnostics/                       Manual engineering and regression diagnostics
-experiments/                       Historical learning exercises
-streamlit_app.py                   Multipage Streamlit router
-cli.py                             Persistent command-line interface
-run_app.ps1                        Windows Streamlit launcher
-rag.db                             Generated local knowledge base
+app_pages/          Streamlit application pages
+data/documents/     Local source documents
+src/fabric_rag/     Production RAG package
+diagnostics/        Engineering and regression diagnostics
+experiments/        Historical experiments
+rag.db              Current SQLite knowledge base
+streamlit_app.py    Streamlit entry point
+cli.py              Command-line interface
+run_app.ps1         Windows launcher
 ```
+
+## Disclaimer
+
+This is an independent project and is not an official Microsoft product.
+
+Bundled Microsoft Fabric documentation remains subject to its original licensing and attribution requirements.
